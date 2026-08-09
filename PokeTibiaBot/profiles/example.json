@@ -1,0 +1,43 @@
+{
+  "Name": "Exemplo - Cave Rattata",
+  "Version": "1.0",
+  "GameWindowTitle": "PokeTibia",
+  "HpBarX": 690,
+  "HpBarY": 65,
+  "HpBarWidth": 94,
+  "MpBarX": 690,
+  "MpBarY": 78,
+  "MpBarWidth": 94,
+  "HpBarColorR": 220,
+  "HpBarColorG": 60,
+  "HpBarColorB": 60,
+  "MpBarColorR": 60,
+  "MpBarColorG": 120,
+  "MpBarColorB": 220,
+  "WalkDelayMs": 350,
+  "ActionDelayMs": 200,
+  "LoopWaypoints": true,
+  "Waypoints": [
+    { "Id": 1, "Name": "N x3", "Action": "Walk", "Direction": "n", "Repeat": 3, "WaitMs": 500, "Hotkey": "F1" },
+    { "Id": 2, "Name": "E x2", "Action": "Walk", "Direction": "e", "Repeat": 2, "WaitMs": 500, "Hotkey": "F1" },
+    { "Id": 3, "Name": "Send pokeball", "Action": "Command", "ChatText": "/pokeball", "WaitMs": 400, "Hotkey": "F1" },
+    { "Id": 4, "Name": "Wait fight", "Action": "Wait", "WaitMs": 2500, "Hotkey": "F1" },
+    { "Id": 5, "Name": "S x3", "Action": "Walk", "Direction": "s", "Repeat": 3, "WaitMs": 500, "Hotkey": "F1" },
+    { "Id": 6, "Name": "W x2", "Action": "Walk", "Direction": "w", "Repeat": 2, "WaitMs": 500, "Hotkey": "F1" }
+  ],
+  "Hotkeys": [
+    { "Name": "Attack", "Key": "F5", "Command": "attack", "CooldownMs": 2000, "Enabled": true },
+    { "Name": "Say heal", "Key": "F6", "Command": "heal", "CooldownMs": 5000, "Enabled": false }
+  ],
+  "HealingRules": [
+    { "Name": "HP potion", "HpThresholdPercent": 70, "MpThresholdPercent": 0, "Hotkey": "F1", "CooldownMs": 1200, "Enabled": true },
+    { "Name": "MP potion", "HpThresholdPercent": 100, "MpThresholdPercent": 40, "Hotkey": "F2", "CooldownMs": 1500, "Enabled": true }
+  ],
+  "Loot": {
+    "Enabled": true,
+    "LootAll": true,
+    "LootAttempts": 3,
+    "LootDelayMs": 250,
+    "Items": []
+  }
+}

@@ -1,0 +1,310 @@
+<Window x:Class="PokeTibiaBot.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:PokeTibiaBot.ViewModels"
+        xmlns:models="clr-namespace:PokeTibiaBot.Models"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+        Title="PokeTibia Bot"
+        Width="1200" Height="780"
+        Background="{StaticResource BgPrimary}"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Consolas">
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <ObjectDataProvider x:Key="WaypointActionsEnum" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:WaypointAction"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="180"/>
+        </Grid.RowDefinitions>
+
+        <!-- HEADER / STATUS BAR -->
+        <Border Grid.Row="0" Background="{StaticResource BgSecondary}" Padding="12" CornerRadius="4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="POKETIBIA BOT" FontSize="20" FontWeight="Bold"
+                               Foreground="{StaticResource AccentGold}" VerticalAlignment="Center"/>
+                    <Rectangle Width="1" Fill="{StaticResource BorderColor}" Margin="16,4"/>
+                    <TextBlock Text="Status:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding Status}" FontWeight="Bold"
+                               Foreground="{StaticResource AccentGreen}" VerticalAlignment="Center"/>
+                    <Rectangle Width="1" Fill="{StaticResource BorderColor}" Margin="16,4"/>
+                    <TextBlock Text="HP:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding HpPercent, StringFormat={}{0}%}"
+                               Foreground="{StaticResource AccentRed}" VerticalAlignment="Center" MinWidth="40"/>
+                    <TextBlock Text="MP:" VerticalAlignment="Center" Margin="10,0,6,0"/>
+                    <TextBlock Text="{Binding MpPercent, StringFormat={}{0}%}"
+                               Foreground="#5B9BD5" VerticalAlignment="Center" MinWidth="40"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="▶  START" Command="{Binding StartBotCommand}"
+                            Background="{StaticResource AccentGreen}" Foreground="White" Margin="4"
+                            data-testid="btn-start"/>
+                    <Button Content="⏸  PAUSE" Command="{Binding PauseBotCommand}" Margin="4"/>
+                    <Button Content="▶  RESUME" Command="{Binding ResumeBotCommand}" Margin="4"/>
+                    <Button Content="⏹  STOP" Command="{Binding StopBotCommand}"
+                            Background="{StaticResource AccentRed}" Foreground="White" Margin="4"/>
+                    <Rectangle Width="1" Fill="{StaticResource BorderColor}" Margin="8,0"/>
+                    <Button Content="🖥 HUD" Command="{Binding ToggleOverlayCommand}" Margin="4"
+                            ToolTip="Ativar/desativar overlay transparente sobre o jogo"/>
+                    <Button Content="🔎 SCAN" Command="{Binding OpenScannerCommand}" Margin="4"
+                            ToolTip="Abrir Memory Scanner (CE-style)"/>
+                    <Rectangle Width="1" Fill="{StaticResource BorderColor}" Margin="8,0"/>
+                    <Button Content="💾 SAVE" Command="{Binding SaveProfileCommand}" Margin="4"/>
+                    <Button Content="📂 LOAD" Command="{Binding LoadProfileCommand}" Margin="4"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- MAIN CONTENT -->
+        <Grid Grid.Row="1" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="380"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="340"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT: WAYPOINTS -->
+            <GroupBox Grid.Column="0" Header="🗺  WAYPOINTS (rota do bot)">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <Button Content="+ Add" Command="{Binding AddWaypointCommand}"/>
+                        <Button Content="- Del" Command="{Binding RemoveWaypointCommand}"/>
+                        <Button Content="↑" Command="{Binding MoveWaypointUpCommand}"/>
+                        <Button Content="↓" Command="{Binding MoveWaypointDownCommand}"/>
+                        <Button Content="⏺ REC" Command="{Binding ToggleRecordingCommand}"
+                                Background="{StaticResource AccentRed}"
+                                Foreground="White"
+                                ToolTip="Gravar movimentos - usa setas do teclado"/>
+                    </StackPanel>
+                    <ListBox ItemsSource="{Binding Waypoints}"
+                             SelectedItem="{Binding SelectedWaypoint}"
+                             Background="{StaticResource BgSecondary}"
+                             Foreground="{StaticResource TextPrimary}"
+                             BorderBrush="{StaticResource BorderColor}"/>
+                </DockPanel>
+            </GroupBox>
+
+            <!-- CENTER: WAYPOINT EDITOR + HEALING + HOTKEYS -->
+            <Grid Grid.Column="1" Margin="8,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <GroupBox Grid.Row="0" Header="✎ EDITAR WAYPOINT">
+                    <StackPanel DataContext="{Binding SelectedWaypoint}">
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Nome:"/>
+                            <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Label Grid.Column="2" Content="Ação:"/>
+                            <ComboBox Grid.Column="3"
+                                      ItemsSource="{Binding Source={StaticResource WaypointActionsEnum}}"
+                                      SelectedItem="{Binding Action}"/>
+                        </Grid>
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Direção:"/>
+                            <ComboBox Grid.Column="1" SelectedValue="{Binding Direction}" SelectedValuePath="Content">
+                                <ComboBoxItem Content="n"/><ComboBoxItem Content="s"/>
+                                <ComboBoxItem Content="e"/><ComboBoxItem Content="w"/>
+                                <ComboBoxItem Content="ne"/><ComboBoxItem Content="nw"/>
+                                <ComboBoxItem Content="se"/><ComboBoxItem Content="sw"/>
+                            </ComboBox>
+                            <Label Grid.Column="2" Content="Hotkey:"/>
+                            <TextBox Grid.Column="3" Text="{Binding Hotkey}"/>
+                        </Grid>
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Wait (ms):"/>
+                            <TextBox Grid.Column="1" Text="{Binding WaitMs}"/>
+                            <Label Grid.Column="2" Content="Repetir:"/>
+                            <TextBox Grid.Column="3" Text="{Binding Repeat}"/>
+                        </Grid>
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Screen X:"/>
+                            <TextBox Grid.Column="1" Text="{Binding ScreenX}"/>
+                            <Label Grid.Column="2" Content="Screen Y:"/>
+                            <TextBox Grid.Column="3" Text="{Binding ScreenY}"/>
+                        </Grid>
+                        <Label Content="Texto de chat / comando NPC:"/>
+                        <TextBox Text="{Binding ChatText, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Row="1" Header="❤ REGRAS DE CURA / MANA">
+                    <DockPanel>
+                        <Button Content="+ Add Rule" DockPanel.Dock="Top" HorizontalAlignment="Left"
+                                Command="{Binding AddHealingRuleCommand}" Margin="0,0,0,4"/>
+                        <DataGrid ItemsSource="{Binding HealingRules}" AutoGenerateColumns="False"
+                                  Background="{StaticResource BgSecondary}"
+                                  Foreground="{StaticResource TextPrimary}"
+                                  RowBackground="{StaticResource BgTertiary}"
+                                  AlternatingRowBackground="{StaticResource BgSecondary}"
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridCheckBoxColumn Header="On" Binding="{Binding Enabled}" Width="40"/>
+                                <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="*"/>
+                                <DataGridTextColumn Header="HP≤%" Binding="{Binding HpThresholdPercent}" Width="60"/>
+                                <DataGridTextColumn Header="MP≤%" Binding="{Binding MpThresholdPercent}" Width="60"/>
+                                <DataGridTextColumn Header="Hotkey" Binding="{Binding Hotkey}" Width="70"/>
+                                <DataGridTextColumn Header="CD ms" Binding="{Binding CooldownMs}" Width="70"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Row="2" Header="⌨ HOTKEYS (comandos recorrentes)">
+                    <DockPanel>
+                        <Button Content="+ Add Hotkey" DockPanel.Dock="Top" HorizontalAlignment="Left"
+                                Command="{Binding AddHotkeyCommand}" Margin="0,0,0,4"/>
+                        <DataGrid ItemsSource="{Binding Hotkeys}" AutoGenerateColumns="False"
+                                  Background="{StaticResource BgSecondary}"
+                                  Foreground="{StaticResource TextPrimary}"
+                                  RowBackground="{StaticResource BgTertiary}"
+                                  AlternatingRowBackground="{StaticResource BgSecondary}"
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridCheckBoxColumn Header="On" Binding="{Binding Enabled}" Width="40"/>
+                                <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="150"/>
+                                <DataGridTextColumn Header="Tecla" Binding="{Binding Key}" Width="70"/>
+                                <DataGridTextColumn Header="Comando/Texto" Binding="{Binding Command}" Width="*"/>
+                                <DataGridTextColumn Header="CD ms" Binding="{Binding CooldownMs}" Width="70"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+            </Grid>
+
+            <!-- RIGHT: CONFIGURAÇÕES -->
+            <GroupBox Grid.Column="2" Header="⚙ CONFIGURAÇÕES DO PERFIL">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel DataContext="{Binding Profile}">
+                        <Label Content="Nome do perfil"/>
+                        <TextBox Text="{Binding Name}"/>
+
+                        <Label Content="Título da janela do jogo"/>
+                        <TextBox Text="{Binding GameWindowTitle}"
+                                 ToolTip="Ex: 'Tibia', 'PokeTibia', 'PxGames'"/>
+
+                        <Separator Margin="0,8"/>
+                        <TextBlock Text="BARRAS HP/MP (coordenadas de tela)"
+                                   FontWeight="Bold" Foreground="{StaticResource AccentGold}"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <Label Content="HP X:"/>
+                                <TextBox Text="{Binding HpBarX}"/>
+                                <Label Content="HP Y:"/>
+                                <TextBox Text="{Binding HpBarY}"/>
+                                <Label Content="HP Width:"/>
+                                <TextBox Text="{Binding HpBarWidth}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <Label Content="MP X:"/>
+                                <TextBox Text="{Binding MpBarX}"/>
+                                <Label Content="MP Y:"/>
+                                <TextBox Text="{Binding MpBarY}"/>
+                                <Label Content="MP Width:"/>
+                                <TextBox Text="{Binding MpBarWidth}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Separator Margin="0,8"/>
+                        <TextBlock Text="TIMINGS" FontWeight="Bold"
+                                   Foreground="{StaticResource AccentGold}"/>
+                        <Label Content="Walk delay (ms):"/>
+                        <TextBox Text="{Binding WalkDelayMs}"/>
+                        <Label Content="Action delay (ms):"/>
+                        <TextBox Text="{Binding ActionDelayMs}"/>
+                        <CheckBox Content="Repetir waypoints (loop)" IsChecked="{Binding LoopWaypoints}" Margin="0,6"/>
+
+                        <Separator Margin="0,8"/>
+                        <TextBlock Text="LOOT" FontWeight="Bold"
+                                   Foreground="{StaticResource AccentGold}"/>
+                        <CheckBox Content="Loot habilitado" IsChecked="{Binding Loot.Enabled}"/>
+                        <CheckBox Content="Loot all (tudo)" IsChecked="{Binding Loot.LootAll}"/>
+                        <Label Content="Loot delay (ms):"/>
+                        <TextBox Text="{Binding Loot.LootDelayMs}"/>
+
+                        <Separator Margin="0,8"/>
+                        <TextBlock Text="ANTI-BAN (HUMANIZE)" FontWeight="Bold"
+                                   Foreground="{StaticResource AccentGold}"/>
+                        <CheckBox Content="Humanize ativado" IsChecked="{Binding HumanizeEnabled}"/>
+                        <Label Content="Jitter (± %)"/>
+                        <TextBox Text="{Binding JitterPercent}"
+                                 ToolTip="Ex: 25 = cada delay varia ±25%"/>
+                        <Label Content="Micro-pausa min (ms)"/>
+                        <TextBox Text="{Binding MicroPauseMinMs}"/>
+                        <Label Content="Micro-pausa max (ms)"/>
+                        <TextBox Text="{Binding MicroPauseMaxMs}"/>
+                        <Label Content="Chance de distração (%)"/>
+                        <TextBox Text="{Binding DistractionChance}"
+                                 ToolTip="% de chance de fazer uma pausa mais longa (simula distração)"/>
+                        <Label Content="Distração min (ms)"/>
+                        <TextBox Text="{Binding DistractionMinMs}"/>
+                        <Label Content="Distração max (ms)"/>
+                        <TextBox Text="{Binding DistractionMaxMs}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+        </Grid>
+
+        <!-- LOG -->
+        <GroupBox Grid.Row="2" Header="📜 LOG DE EVENTOS" Margin="0,8,0,0">
+            <ListBox ItemsSource="{Binding Log}"
+                     Background="#0A0E13"
+                     Foreground="#7FDBCA"
+                     FontFamily="Consolas" FontSize="12"
+                     BorderBrush="{StaticResource BorderColor}"/>
+        </GroupBox>
+    </Grid>
+</Window>

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ProcessFinder.h"
+#include "ProcessList.h"
 #include "ScreenCapture.h"
 #include "ImageProcessor.h"
 #include "MemoryReader.h"
@@ -86,4 +87,19 @@ PT_API uint64_t __cdecl Scanner_Count(pt::ScanSession* s) {
 PT_API uint64_t __cdecl Scanner_GetResults(pt::ScanSession* s, uint64_t offset, uint64_t maxOut,
                                             uint64_t* addrs, int32_t* vals) {
     return (uint64_t)pt::GetResults(s, (size_t)offset, (size_t)maxOut, addrs, vals);
+}
+
+// ==== Process listing ====
+// Preenche names[] com nomes (string, terminados em NUL) e pids[] com PIDs.
+// namesBuf deve ter tamanho suficiente; retorna quantos processos foram enumerados.
+// Cada nome ocupa exatamente 260 bytes no buffer (MAX_PATH), padded com zeros.
+PT_API uint32_t __cdecl ListProcesses(char* namesBuf, uint32_t* pids, uint32_t maxOut) {
+    if (!namesBuf || !pids || maxOut == 0) return 0;
+    auto list = pt::ListProcesses(maxOut);
+    memset(namesBuf, 0, (size_t)maxOut * 260);
+    for (size_t i = 0; i < list.size(); i++) {
+        pids[i] = list[i].pid;
+        strncpy_s(namesBuf + i * 260, 260, list[i].name.c_str(), _TRUNCATE);
+    }
+    return (uint32_t)list.size();
 }

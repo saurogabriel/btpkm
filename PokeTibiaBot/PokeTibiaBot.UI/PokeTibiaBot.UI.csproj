@@ -17,10 +17,25 @@
     <PackageReference Include="System.Text.Json" Version="8.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="..\PokeTibiaBot.Native\x64\Release\PokeTibiaBot.Native.dll">
-      <Link>PokeTibiaBot.Native.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+  <!--
+    Copia PokeTibiaBot.Native.dll para o output. Procura em Release e Debug do
+    projeto nativo. Se nenhuma for encontrada, o build FALHA com mensagem clara
+    (evita rodar o app sem a DLL e crashar em runtime).
+  -->
+  <Target Name="CopyNativeDll" AfterTargets="Build">
+    <PropertyGroup>
+      <NativeRelease>..\PokeTibiaBot.Native\x64\Release\PokeTibiaBot.Native.dll</NativeRelease>
+      <NativeDebug>..\PokeTibiaBot.Native\x64\Debug\PokeTibiaBot.Native.dll</NativeDebug>
+    </PropertyGroup>
+    <Copy Condition="Exists('$(NativeRelease)')"
+          SourceFiles="$(NativeRelease)"
+          DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="!Exists('$(NativeRelease)') And Exists('$(NativeDebug)')"
+          SourceFiles="$(NativeDebug)"
+          DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true" />
+    <Error Condition="!Exists('$(NativeRelease)') And !Exists('$(NativeDebug)')"
+           Text="PokeTibiaBot.Native.dll não encontrado. Compile o projeto PokeTibiaBot.Native em x64 primeiro (Build Order: Nativo antes do UI)." />
+  </Target>
 </Project>

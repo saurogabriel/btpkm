@@ -53,6 +53,7 @@
     <ClCompile Include="ScreenCapture.cpp" />
     <ClCompile Include="ImageProcessor.cpp" />
     <ClCompile Include="ProcessFinder.cpp" />
+    <ClCompile Include="ProcessList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -61,6 +62,7 @@
     <ClInclude Include="ScreenCapture.h" />
     <ClInclude Include="ImageProcessor.h" />
     <ClInclude Include="ProcessFinder.h" />
+    <ClInclude Include="ProcessList.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

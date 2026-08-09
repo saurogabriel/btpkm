@@ -39,11 +39,20 @@ namespace pt {
         s->values.clear();
         std::vector<uint8_t> buf;
 
+        // Limite defensivo por região (evita alocar GB inteiros).
+        const size_t MAX_REGION = 64 * 1024 * 1024; // 64 MB
+
         ForEachRegion(s->hProc, [&](uintptr_t base, size_t size) {
             if (s->addresses.size() >= maxResults) return;
-            buf.resize(size);
+            if (size == 0) return;
+            size_t take = (size > MAX_REGION) ? MAX_REGION : size;
+
+            try { buf.resize(take); }
+            catch (...) { return; } // sem memória, pula região
+
             SIZE_T read = 0;
-            if (!ReadProcessMemory(s->hProc, (LPCVOID)base, buf.data(), size, &read)) return;
+            if (!ReadProcessMemory(s->hProc, (LPCVOID)base, buf.data(), take, &read)) return;
+            if (read < 4) return;
             size_t limit = read - (read % 4);
             for (size_t i = 0; i + 4 <= limit; i += 4) {
                 int32_t v = *reinterpret_cast<int32_t*>(&buf[i]);

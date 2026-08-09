@@ -81,4 +81,10 @@ public static class NativeBridge
     [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)]
     public static extern ulong Scanner_GetResults(IntPtr session, ulong offset, ulong maxOut,
                                                    [Out] ulong[] addrs, [Out] int[] vals);
+
+    /// <summary>
+    /// Lista processos. namesBuf recebe entradas de 260 bytes cada (ANSI).
+    /// </summary>
+    [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint ListProcesses([Out] byte[] namesBuf, [Out] uint[] pids, uint maxOut);
 }
